@@ -66,15 +66,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   takeScreenShot() async {
     print("processing");
     RenderRepaintBoundary boundary = src.currentContext.findRenderObject();
-    ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+    ui.Image image = await boundary.toImage(pixelRatio: 1.0);
     ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     Uint8List pngBytes = byteData.buffer.asUint8List();
     String bs64 = base64Encode(pngBytes);
 
-    final directory = (await getExternalStorageDirectory()).path;
-    File imgFile = File('$directory/screenshot.png');
+    
+    final directory = await getExternalStorageDirectory();
+    final myImagePath = '${directory.path}/MyImages';
+    final myImgDir = await new Directory(myImagePath).create();
+
+    File imgFile = File('$myImagePath/abc.png');
     imgFile.writeAsBytes(pngBytes);
-    print(directory);
+    print(imgFile);
+    // await GallerySaver.saveImage(imgFile);
     print("done");
   }
 
@@ -83,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    PermissionsService().requestCameraPermission(
+    PermissionsService().requestStoragePermission(
       onPermissionDenied: () {
         print('Permission has been denied');
     });
@@ -92,7 +97,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: Container(
+        height: MediaQuery.of(context).size.height,
         child: Column(
           children: <Widget> [
             Container(

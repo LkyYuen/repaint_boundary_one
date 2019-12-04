@@ -309,6 +309,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     child: Stack(
                       children: <Widget>[
                         _image,
+                        Draggable(
+                          data: 'Flutter',
+                          child: FlutterLogo(
+                            size: 100.0,
+                          ),
+                          feedback: FlutterLogo(
+                            size: 100.0,
+                          ),
+                          childWhenDragging: Container(),
+                        ),
                         editMode == "textMode" ? 
                         Container(
                           child: Positioned(

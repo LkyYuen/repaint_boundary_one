@@ -10,7 +10,8 @@ import 'package:flutter/rendering.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:repaint_boundary_one/PermissionsService.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart'; 
+import 'package:flutter_hsvcolor_picker/flutter_hsvcolor_picker.dart' as hsvColor;
 
 void main() => runApp(MyApp());
 
@@ -42,6 +43,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   GlobalKey src = GlobalKey();
   Image _image = Image.network("https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg");
+  var view = "hsvPicker";
+
 
   // Draw Variable Start
   Color selectedColor = Colors.black;
@@ -94,10 +97,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
+  var hsvPicker = Container(
+    child: hsvColor.ColorPicker(
+      color: Colors.blue,
+      onChanged: (value){ }
+    )
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: view == "hsvPicker" ? hsvPicker : Container(
         height: MediaQuery.of(context).size.height,
         child: Column(
           children: <Widget> [

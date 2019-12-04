@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:ui';
@@ -64,6 +65,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   ];
   // Draw Variable End
 
+
+  ValueChanged<HSVColor> onChanged;
+  List<Color> linearColor = [
+    Color(0xfff32121),
+    Color(0xfff3f321),
+    Color(0xff21f321),
+    Color(0xff21f3f3),
+    Color(0xff2121f3),
+    Color(0xfff321f3),
+    Color(0xfff32121),
+  ];
+  // ColorListener colorListener;
+
+  // void hueOnChange(double value) => onChanged(color.withHue(value));
+
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
   
   takeScreenShot() async {
@@ -104,135 +120,255 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     )
   );
 
+  Container linearGradientBox = Container(
+    color: Colors.red,
+    height: 250.0,
+    width: 500.0,
+    child: Text("hi"),
+    // DecoratedBox(
+    //   decoration: BoxDecoration(
+    //     gradient: LinearGradient(
+    //       begin: Alignment.centerLeft,
+    //       end: Alignment.centerRight,
+    //       colors: [
+    //         Color(0xfff32121),
+    //         Color(0xfff3f321),
+    //         Color(0xff21f321),
+    //         Color(0xff21f3f3),
+    //         Color(0xff2121f3),
+    //         Color(0xfff321f3),
+    //         Color(0xfff32121),
+    //       ],
+    //       tileMode: TileMode.clamp
+    //     )
+    //   ),
+    // ),
+  );
+
+  _onDragUpdate(BuildContext context, DragUpdateDetails update) {
+    print(update.globalPosition.toString());
+    RenderBox getBox = context.findRenderObject();
+    var local = getBox.globalToLocal(update.globalPosition);
+    print(local.dx.toString() + "|" + local.dy.toString());
+  }
+
+  /// calculate colors picked from palette and update our states.
+  void handleTouch(Offset globalPosition, BuildContext context) {
+    RenderBox box = context.findRenderObject();
+    Offset localPosition = box.globalToLocal(globalPosition);
+    double percent;
+
+    percent = localPosition.dx / 350;
+
+    percent = min(max(0.0, percent), 1.0);
+    setState(() {
+      percent = percent;
+    });
+
+    Color color = HSVColor.fromAHSV(1.0, percent * 360, 1.0, 1.0).toColor();
+    print(color);
+  }
+  // void handleTouch(Offset globalPosition, BuildContext context) {
+  //   RenderBox box = context.findRenderObject();
+  //   Offset localPosition = box.globalToLocal(globalPosition);
+  //   double percent;
+  //   if (widget.horizontal) {
+  //     percent = (localPosition.dx - widget.thumbRadius) / barWidth;
+  //   } else {
+  //     percent = (localPosition.dy - widget.thumbRadius) / barHeight;
+  //   }
+  //   percent = min(max(0.0, percent), 1.0);
+  //   setState(() {
+  //     this.percent = percent;
+  //   });
+  //   switch (widget.pickMode) {
+  //     case PickMode.Color:
+  //       Color color = HSVColor.fromAHSV(1.0, percent * 360, 1.0, 1.0).toColor();
+  //       widget.colorListener(color.value);
+  //       break;
+  //     case PickMode.Grey:
+  //       final int channel = (0xff * percent).toInt();
+  //       widget.colorListener(Color
+  //         .fromARGB(0xff, channel, channel, channel)
+  //         .value);
+  //       break;
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: view == "hsvPicker" ? hsvPicker : Container(
-        height: MediaQuery.of(context).size.height,
-        child: Column(
-          children: <Widget> [
-            Container(
-              width: MediaQuery.of(context).size.width,
-              height: 50.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.album),
-                    onPressed: () {
-                      setState(() {
-                        if (selectedMode == SelectedMode.StrokeWidth)
-                          showBottomList = !showBottomList;
-                        selectedMode = SelectedMode.StrokeWidth;
-                      });
-                    }
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.opacity),
-                    onPressed: () {
-                      setState(() {
-                        if (selectedMode == SelectedMode.Opacity)
-                          showBottomList = !showBottomList;
-                        selectedMode = SelectedMode.Opacity;
-                      });
-                    }
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.color_lens),
-                    onPressed: () {
-                      setState(() {
-                        if (selectedMode == SelectedMode.Color)
-                          showBottomList = !showBottomList;
-                        selectedMode = SelectedMode.Color;
-                      });
-                    }
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () {
-                      setState(() {
-                        showBottomList = false;
-                        points.clear();
-                      });
-                    }
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                // height: 500.0,
-                child: RepaintBoundary(
-                  key: src,
-                  child: Stack(
-                    children: <Widget>[
-                      _image,
-                      GestureDetector(
-                        onPanUpdate: (details) {
-                          setState(() {
-                            RenderBox renderBox = context.findRenderObject();
-                            points.add(DrawingPoints(
-                                points: renderBox.globalToLocal(details.globalPosition),
-                                paint: Paint()
-                                  ..strokeCap = strokeCap
-                                  ..isAntiAlias = true
-                                  ..color = selectedColor.withOpacity(opacity)
-                                  ..strokeWidth = strokeWidth));
-                          });
-                        },
-                        onPanStart: (details) {
-                          setState(() {
-                            RenderBox renderBox = context.findRenderObject();
-                            points.add(DrawingPoints(
-                                points: renderBox.globalToLocal(details.globalPosition),
-                                paint: Paint()
-                                  ..strokeCap = strokeCap
-                                  ..isAntiAlias = true
-                                  ..color = selectedColor.withOpacity(opacity)
-                                  ..strokeWidth = strokeWidth));
-                          });
-                        },
-                        onPanEnd: (details) {
-                          setState(() {
-                            points.add(null);
-                          });
-                        },
-                        child: CustomPaint(
-                          size: Size.infinite,
-                          painter: DrawingPainter(
-                            pointsList: points,
-                          ),
-                        ),
-                      ),
-                      // Align(
-                      //   alignment: Alignment.center,
-                      //   child: TextField(
-                      //     maxLines: 3,
-                      //     decoration: InputDecoration(
-                      //       border: InputBorder.none,
-                      //       hintText: "Write here..",
-                      //     ),
-                      //     style: TextStyle(
-                      //       color: Colors.black,
-                      //     ),
-                      //   ),
-                      // )
+      body: 
+      // hsvPicker
+      Center(
+        child: Container(
+          // color: Colors.red,
+          margin: EdgeInsets.only(top: 100.0),
+          height: 20.0,
+          width: 350.0,
+          child: GestureDetector(
+            // onPanUpdate: (details) {
+            //   if (details.delta.dx > 0)
+            //     print("Dragging in +X direction");
+            //   else
+            //     print("Dragging in -X direction");
+
+            //   if (details.delta.dy > 0)
+            //     print("Dragging in +Y direction");
+            //   else
+            //     print("Dragging in -Y direction");
+            // },
+            onHorizontalDragUpdate: (DragUpdateDetails details) => handleTouch(details.globalPosition, context),
+            // onHorizontalDragUpdate: (DragUpdateDetails update) => _onDragUpdate(context, update),
+            child:
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Color(0xfff32121),
+                      Color(0xfff3f321),
+                      Color(0xff21f321),
+                      Color(0xff21f3f3),
+                      Color(0xff2121f3),
+                      Color(0xfff321f3),
+                      Color(0xfff32121),
                     ],
-                  ),
+                    tileMode: TileMode.clamp
+                  )
                 ),
               ),
-            ),
-            RaisedButton(
-              child: Text('Download'),
-              onPressed: (){
-                FocusScope.of(context).requestFocus(FocusNode());
-                takeScreenShot();
-              },
-            )
-          ]
+          ),
         )
       )
+
+      //  Container(
+      //   height: MediaQuery.of(context).size.height,
+      //   child: Column(
+      //     children: <Widget> [
+      //       Container(
+      //         width: MediaQuery.of(context).size.width,
+      //         height: 50.0,
+      //         child: Row(
+      //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //           children: <Widget>[
+      //             IconButton(
+      //               icon: Icon(Icons.album),
+      //               onPressed: () {
+      //                 setState(() {
+      //                   if (selectedMode == SelectedMode.StrokeWidth)
+      //                     showBottomList = !showBottomList;
+      //                   selectedMode = SelectedMode.StrokeWidth;
+      //                 });
+      //               }
+      //             ),
+      //             IconButton(
+      //               icon: Icon(Icons.opacity),
+      //               onPressed: () {
+      //                 setState(() {
+      //                   if (selectedMode == SelectedMode.Opacity)
+      //                     showBottomList = !showBottomList;
+      //                   selectedMode = SelectedMode.Opacity;
+      //                 });
+      //               }
+      //             ),
+      //             IconButton(
+      //               icon: Icon(Icons.color_lens),
+      //               onPressed: () {
+      //                 setState(() {
+      //                   if (selectedMode == SelectedMode.Color)
+      //                     showBottomList = !showBottomList;
+      //                   selectedMode = SelectedMode.Color;
+      //                 });
+      //               }
+      //             ),
+      //             IconButton(
+      //               icon: Icon(Icons.clear),
+      //               onPressed: () {
+      //                 setState(() {
+      //                   showBottomList = false;
+      //                   points.clear();
+      //                 });
+      //               }
+      //             ),
+      //           ],
+      //         ),
+      //       ),
+      //       Expanded(
+      //         child: Container(
+      //           width: MediaQuery.of(context).size.width,
+      //           // height: 500.0,
+      //           child: RepaintBoundary(
+      //             key: src,
+      //             child: Stack(
+      //               children: <Widget>[
+      //                 _image,
+      //                 GestureDetector(
+      //                   onPanUpdate: (details) {
+      //                     setState(() {
+      //                       RenderBox renderBox = context.findRenderObject();
+      //                       points.add(DrawingPoints(
+      //                           points: renderBox.globalToLocal(details.globalPosition),
+      //                           paint: Paint()
+      //                             ..strokeCap = strokeCap
+      //                             ..isAntiAlias = true
+      //                             ..color = selectedColor.withOpacity(opacity)
+      //                             ..strokeWidth = strokeWidth));
+      //                     });
+      //                   },
+      //                   onPanStart: (details) {
+      //                     setState(() {
+      //                       RenderBox renderBox = context.findRenderObject();
+      //                       points.add(DrawingPoints(
+      //                           points: renderBox.globalToLocal(details.globalPosition),
+      //                           paint: Paint()
+      //                             ..strokeCap = strokeCap
+      //                             ..isAntiAlias = true
+      //                             ..color = selectedColor.withOpacity(opacity)
+      //                             ..strokeWidth = strokeWidth));
+      //                     });
+      //                   },
+      //                   onPanEnd: (details) {
+      //                     setState(() {
+      //                       points.add(null);
+      //                     });
+      //                   },
+      //                   child: CustomPaint(
+      //                     size: Size.infinite,
+      //                     painter: DrawingPainter(
+      //                       pointsList: points,
+      //                     ),
+      //                   ),
+      //                 ),
+      //                 // Align(
+      //                 //   alignment: Alignment.center,
+      //                 //   child: TextField(
+      //                 //     maxLines: 3,
+      //                 //     decoration: InputDecoration(
+      //                 //       border: InputBorder.none,
+      //                 //       hintText: "Write here..",
+      //                 //     ),
+      //                 //     style: TextStyle(
+      //                 //       color: Colors.black,
+      //                 //     ),
+      //                 //   ),
+      //                 // )
+      //               ],
+      //             ),
+      //           ),
+      //         ),
+      //       ),
+      //       RaisedButton(
+      //         child: Text('Download'),
+      //         onPressed: (){
+      //           FocusScope.of(context).requestFocus(FocusNode());
+      //           takeScreenShot();
+      //         },
+      //       )
+      //     ]
+      //   )
+      // )
     );
   }
 

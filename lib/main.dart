@@ -251,10 +251,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
 
     print(color);
-    setState(() {
-      colorSelected = color;
-      textColor = color;
-    });
+    if (editMode == "drawMode") {
+      setState(() {
+        selectedColor = color;
+      });
+    }
+    else if (editMode == "textMode") {
+      setState(() {
+        textColor = color;
+      });
+    }
+
+    
+    
   }
   // void handleTouch(Offset globalPosition, BuildContext context) {
   //   RenderBox box = context.findRenderObject();
@@ -499,13 +508,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                   editMode = "textMode";
                                 });
                               },
-                              child: Text(textDisplay,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 28.0,
-                                  color: textColor
-                                  // color: Colors.red
+                              child: Container(
+                                width: MediaQuery.of(context).size.width * 0.7,
+                                child: Text(textDisplay,
+                                  maxLines: 100,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 28.0,
+                                    color: textColor
+                                    // color: Colors.red
+                                  )
                                 )
                               ),
                             ),
@@ -570,7 +583,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     ),
                   ),
                   Visibility( // COLOR SLIDER WIDGET
-                    visible: editMode == "textMode" ? true : false,
+                    visible: editMode == "textMode" || editMode == "drawMode" ? true : false,
                     child: Align( // COLOR PICKER
                       alignment: Alignment(0.95, -0.65),
                       child: Container(

@@ -45,7 +45,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
-  FocusNode editTextFocusNode;
+  FocusNode editTextFocusNode = FocusNode();
   GlobalKey src = GlobalKey();
   var _image = "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg";
   var view = "hsvPicker";
@@ -145,7 +145,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         print('Permission has been denied');
     });
 
-     editTextFocusNode = FocusNode();
+    //  editTextFocusNode = FocusNode();
+    // listen to focus changes
+    editTextFocusNode.addListener(() => print('focusNode updated: hasFocus: ${editTextFocusNode.hasFocus}'));
 
     calculateImg();
     // calculateImageWidthHeight(_image);
@@ -374,6 +376,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         child: Center(
                           child: 
                             TextField(
+                              autofocus: true,
                               focusNode: editTextFocusNode,
                               maxLines: 10,
                               controller: textController,

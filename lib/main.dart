@@ -56,13 +56,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   //
   final textController = TextEditingController();
   Offset offset = Offset.zero;
-  var textFontSizeUp = 50.0;
-    double _scale = 1.0;
+  var textFontSizeUp = 20.0;
+  double _scale = 1.0;
   double _previousScale;
   var yOffset = 400.0;
   var xOffset = 50.0;
   var rotation = 0.0;
   var lastRotation = 0.0;
+  bool typing = false;
+  bool textMode = false;
+  var textEntered = "";
+  var textDisplay = "";
+  var textColor;
   //
   //
   // TEXT VARIABLE END
@@ -100,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     Color(0xfff32121),
   ];
   var colorSelected;
+  var pickMode = "color"; // grey
   // Color Variable End
 
   // void hueOnChange(double value) => onChanged(color.withHue(value));
@@ -224,18 +230,30 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     RenderBox box = context.findRenderObject();
     Offset localPosition = box.globalToLocal(globalPosition);
     double percent;
+    print(localPosition);
 
-    percent = localPosition.dx / 350;
+    percent = (localPosition.dy - 75) / 350;
+    // percent = localPosition.dx / 360;
 
     percent = min(max(0.0, percent), 1.0);
     setState(() {
       percent = percent;
     });
+    // print(percent);
 
-    Color color = HSVColor.fromAHSV(1.0, percent * 360, 1.0, 1.0).toColor();
+    Color color;
+    if (pickMode == "grey") {
+      final int channel = (0xff * percent).toInt();
+      color = Color.fromARGB(0xff, channel, channel, channel);
+    }
+    else {
+      color = HSVColor.fromAHSV(1.0, percent * 360, 1.0, 1.0).toColor();
+    }
+
     print(color);
     setState(() {
       colorSelected = color;
+      textColor = color;
     });
   }
   // void handleTouch(Offset globalPosition, BuildContext context) {
@@ -268,9 +286,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
 
-    // SystemChrome.setEnabledSystemUIOverlays([]); // hide status bar
+    SystemChrome.setEnabledSystemUIOverlays([]); // hide status bar
 
         return Scaffold(
+          resizeToAvoidBottomInset : false,
           body: 
           // hsvPicker
           // Center(
@@ -325,9 +344,43 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           //   ),
            
           // )
-    
+          
           GestureDetector(
             // onTap: () => FocusScope.of(context).unfocus(),
+            // onTap: editMode == "drawMode" ? () {
+            //   print("yes");
+            // } : () {
+            //   print("no");
+            // },
+            onPanUpdate: (details) {
+              setState(() {
+                RenderBox renderBox = context.findRenderObject();
+                points.add(DrawingPoints(
+                    points: renderBox.globalToLocal(details.globalPosition),
+                    paint: Paint()
+                      ..strokeCap = strokeCap
+                      ..isAntiAlias = true
+                      ..color = selectedColor.withOpacity(opacity)
+                      ..strokeWidth = strokeWidth));
+              });
+            },
+            onPanStart: (details) {
+              setState(() {
+                RenderBox renderBox = context.findRenderObject();
+                points.add(DrawingPoints(
+                    points: renderBox.globalToLocal(details.globalPosition),
+                    paint: Paint()
+                      ..strokeCap = strokeCap
+                      ..isAntiAlias = true
+                      ..color = selectedColor.withOpacity(opacity)
+                      ..strokeWidth = strokeWidth));
+              });
+            },
+            onPanEnd: (details) {
+              setState(() {
+                points.add(null);
+              });
+            },
             child: Container(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
@@ -338,94 +391,223 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   Center(
                     child: Image.network(_image),
                   ),
-                  editMode == "textMode" ? 
-                  Positioned(
-                    left: offset.dx,
-                    top: MediaQuery.of(context).size.height / 2.5,
-                    // top: offset.dy,
-                    child: GestureDetector( 
-                      onPanUpdate: (details) { // dx: horizontal, dy: vertical
-                        if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy < 640)) {
-                        // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                  Visibility( // DISPLAY TEXT WIDGET
+                    visible: false,
+                    // visible: textMode ? true : false,
+                    child: Positioned(
+                      left: offset.dx,
+                      top: offset.dy,
+                      child: GestureDetector( 
+                        onPanUpdate: (details) { // dx: horizontal, dy: vertical
+                          if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                          // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                            setState(() {
+                              offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                            });
+                          }
+                          print(offset.dx.toString() + " | " + offset.dy.toString());
+                        },
+                        onTap: () {
                           setState(() {
-                            offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                            editMode = "textMode";
                           });
-                        }
-                        print(offset.dx.toString() + " | " + offset.dy.toString());
-                      },
-                      // onScaleStart: (scaleDetails) {
-                      //   _previousScale = _scale;
-                      //   print(' scaleStarts = ${scaleDetails.focalPoint}');
-                      // },
-                      // onScaleUpdate: (scaleUpdates) {
-                      //   lastRotation += scaleUpdates.rotation;
-                      //   var offset = scaleUpdates.focalPoint;
-                      //   xOffset = offset.dx;
-                      //   yOffset = offset.dy;
+                        },
+                        // onScaleStart: (scaleDetails) {
+                        //   _previousScale = _scale;
+                        //   print(' scaleStarts = ${scaleDetails.focalPoint}');
+                        // },
+                        // onScaleUpdate: (scaleUpdates) {
+                        //   lastRotation += scaleUpdates.rotation;
+                        //   var offset = scaleUpdates.focalPoint;
+                        //   xOffset = offset.dx;
+                        //   yOffset = offset.dy;
 
-                      //   setState(() => _scale = _previousScale * scaleUpdates.scale);
-                      // },
-                      // onScaleEnd: (scaleEndDetails) {
-                      //   _previousScale = null;
-                      //   print(' scaleEnds = ${scaleEndDetails.velocity}');
-                      // },
-                      child: Container(
+                        //   setState(() => _scale = _previousScale * scaleUpdates.scale);
+                        // },
+                        // onScaleEnd: (scaleEndDetails) {
+                        //   _previousScale = null;
+                        //   print(' scaleEnds = ${scaleEndDetails.velocity}');
+                        // },
+                        child: Text(textDisplay,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28.0,
+                            color: textColor
+                            // color: Colors.red
+                          )
+                        ),
+                      ),
+                    )
+                  ),
+                  Visibility( // DRAWING WIDGET
+                    visible: true,
+                    // visible: editMode == "drawMode" ? true : false,
+                    child: GestureDetector(
+                      onPanUpdate: editMode == "drawMode" ? (details) {
+                        setState(() {
+                          RenderBox renderBox = context.findRenderObject();
+                          points.add(DrawingPoints(
+                              points: renderBox.globalToLocal(details.globalPosition),
+                              paint: Paint()
+                                ..strokeCap = strokeCap
+                                ..isAntiAlias = true
+                                ..color = selectedColor.withOpacity(opacity)
+                                ..strokeWidth = strokeWidth));
+                        });
+                      } : (details) { print("a"); },
+                      onPanStart: editMode == "drawMode" ? (details) {
+                        setState(() {
+                          RenderBox renderBox = context.findRenderObject();
+                          points.add(DrawingPoints(
+                              points: renderBox.globalToLocal(details.globalPosition),
+                              paint: Paint()
+                                ..strokeCap = strokeCap
+                                ..isAntiAlias = true
+                                ..color = selectedColor.withOpacity(opacity)
+                                ..strokeWidth = strokeWidth));
+                        });
+                      } : (details) {print("b");},
+                      onPanEnd: editMode == "drawMode" ? (details) {
+                        setState(() {
+                          points.add(null);
+                        });
+                      } : (details) { print("c"); },
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: DrawingPainter(
+                          pointsList: points,
+                        ),
+                        // child: Text("HELLO WORLD"),
+                        child: Stack(
+                          children: <Widget>[
+                            Positioned(
+                            left: offset.dx,
+                            top: offset.dy,
+                            child: GestureDetector( 
+                              onPanUpdate: (details) { // dx: horizontal, dy: vertical
+                                if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                                // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                                  setState(() {
+                                    offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                                  });
+                                }
+                                print(offset.dx.toString() + " | " + offset.dy.toString());
+                              },
+                              onTap: () {
+                                setState(() {
+                                  editMode = "textMode";
+                                });
+                              },
+                              child: Text(textDisplay,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 28.0,
+                                  color: textColor
+                                  // color: Colors.red
+                                )
+                              ),
+                            ),
+                          )
+                        ]
+                        )
+                      ),
+                    ),
+                  ),
+                  Visibility( // EDIT TEXT WIDGET
+                    visible: editMode == "textMode" ? true : false,
+                    // visible: editTextFocusNode.hasFocus == true ? true : false,
+                    child: GestureDetector( // OVERLAY EDIT TEXT
+                      // onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                      // onTap: () => FocusScope.of(context).unfocus(),
+                      onTap: () {
+                        print("abc");
+                        setState(() {
+                          editMode = "";
+                        });
+                        FocusScope.of(context).requestFocus(new FocusNode());
+                      },
+                      child: Container( // EDIT TEXT OVERLAY
                         width: MediaQuery.of(context).size.width,
-                        height: 150,
-                        color: Colors.red,
+                        height: MediaQuery.of(context).size.height,
+                        color: Colors.black.withOpacity(0.5),
                         child: Center(
-                          child: 
-                            TextField(
+                          child: Container(
+                            width: 300,
+                            height: 250,
+                            child: TextField(
+                              onChanged: (text) {
+                                setState(() {
+                                  textEntered = text;
+                                });
+                              },
+                              onEditingComplete: () {
+                                print("edit complete");
+                                FocusScope.of(context).requestFocus(new FocusNode());
+                                setState(() {
+                                  editMode = "";
+                                  textDisplay = textEntered;
+                                });
+                              },
                               autofocus: true,
                               focusNode: editTextFocusNode,
+                              textInputAction: TextInputAction.done,
                               maxLines: 10,
                               controller: textController,
                               decoration: InputDecoration(
                                 border: InputBorder.none,
                               ),
                               style: TextStyle(
-                                color: Colors.black,
+                                // color: Colors.black,
+                                color: textColor,
                                 fontSize: textFontSizeUp,
                               ),
                             ),
-                            // Text("You Think You Are Funny But You Are Not",
-                            //   textAlign: TextAlign.center,
-                            //   style: TextStyle(
-                            //     fontWeight: FontWeight.bold,
-                            //     fontSize: 28.0,
-                            //     color: Colors.red
-                            //   )
-                            // ),.
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Visibility( // COLOR SLIDER WIDGET
+                    visible: editMode == "textMode" ? true : false,
+                    child: Align( // COLOR PICKER
+                      alignment: Alignment(0.95, -0.65),
+                      child: Container(
+                        // margin: EdgeInsets.only(top: 100.0),
+                        height: 350.0,
+                        width: 10.0,
+                        // height: 20.0,
+                        // width: 400.0,
+                        child: GestureDetector(
+                          onVerticalDragUpdate: (DragUpdateDetails details) => handleTouch(details.globalPosition, context),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                // begin: Alignment.centerLeft,
+                                // end: Alignment.centerRight,
+                                colors: [
+                                  Color(0xff000000),
+                                  Color(0xffffffff),
+                                  Color(0xfff32121),
+                                  Color(0xfff3f321),
+                                  Color(0xff21f321),
+                                  Color(0xff21f3f3),
+                                  Color(0xff2121f3),
+                                  Color(0xfff321f3),
+                                  Color(0xfff32121),
+                                ],
+                                tileMode: TileMode.clamp
+                              )
+                            ),
+                          ),
                         ),
                       )
-                    //   Padding(
-                    //     padding: const EdgeInsets.all(8.0),
-                    //     child: Center(
-                    //       child: 
-                    //       TextField(
-                    //         maxLines: 10,
-                    //         controller: textController,
-                    //         decoration: InputDecoration(
-                    //           border: InputBorder.none,
-                    //         ),
-                    //         style: TextStyle(
-                    //           color: Colors.black,
-                    //           fontSize: textFontSizeUp,
-                    //         ),
-                    //       ),
-                    //       // Text("You Think You Are Funny But You Are Not",
-                    //       //   textAlign: TextAlign.center,
-                    //       //   style: TextStyle(
-                    //       //     fontWeight: FontWeight.bold,
-                    //       //     fontSize: 28.0,
-                    //       //     color: Colors.red
-                    //       //   )
-                    //       // ),
-                    //     ),
-                    //   ),
-                    // )
-                    ),
-                  ) : Container(),
+                    )
+                  ),
+                  
                   Row( // TOP RIGHT TOOLBAR
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
@@ -455,10 +637,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         color: Colors.white,
                         icon: Icon(Icons.title),
                         onPressed: () {
-                          print("a");
                           FocusScope.of(context).requestFocus(editTextFocusNode);
                           setState(() {
                             editMode = "textMode";
+                            // typing = true;
+                            // textMode = true;
                           });
                         }
                       ),
@@ -467,46 +650,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         icon: Icon(Icons.create),
                         onPressed: () {
                           setState(() {
-                            if (selectedMode == SelectedMode.StrokeWidth)
-                              showBottomList = !showBottomList;
-                            selectedMode = SelectedMode.StrokeWidth;
+                            editMode = "drawMode";
                           });
                         }
                       ),
                     ],
                   ),
-                    // Draggable(
-                    //   // alignment: Alignment(0.0, 0.0),
-                    //   child: Container(
-                    //     color: Colors.white,
-                    //     child: TextField(
-                    //       controller: textController,
-                    //       // maxLines: 3,
-                    //       decoration: InputDecoration(
-                    //         border: InputBorder.none,
-                    //       ),
-                    //       style: TextStyle(
-                    //         color: Colors.black,
-                    //       ),
-                    //     ),
-                    //   ),
-                    //   feedback: TextField(
-                    //     // controller: textController,
-                    //     // maxLines: 3,
-                    //     decoration: InputDecoration(
-                    //       border: InputBorder.none,
-                    //     ),
-                    //     style: TextStyle(
-                    //       color: Colors.black,
-                    //     ),
-                    //   ),
-                    //   // childWhenDragging: Container(),
-                    // ) : Container(),
-
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
 
       //  Container(
       //   height: MediaQuery.of(context).size.height,

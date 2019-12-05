@@ -45,9 +45,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
+  FocusNode editTextFocusNode;
   GlobalKey src = GlobalKey();
-  Image _image = Image.network("https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg");
+  var _image = "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg";
   var view = "hsvPicker";
+  bool isSuccessful = false;
 
   // TEXT VARIABLE START
   //
@@ -129,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     // Clean up the controller when the widget is removed from the
     // widget tree.
     textController.dispose();
+    editTextFocusNode.dispose();
     super.dispose();
   }
 
@@ -141,6 +144,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       onPermissionDenied: () {
         print('Permission has been denied');
     });
+
+     editTextFocusNode = FocusNode();
+
+    calculateImg();
+    // calculateImageWidthHeight(_image);
   }
 
   var hsvPicker = Container(
@@ -174,6 +182,33 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     //   ),
     // ),
   );
+
+  calculateImg() async {
+    var a = await _calculateImageDimension();
+    print(a);
+  }
+
+  Future<Size> _calculateImageDimension() {
+    Completer<Size> completer = Completer();
+    Image image = Image.network(_image);
+    image.image.resolve(ImageConfiguration()).addListener(
+      ImageStreamListener(
+        (ImageInfo image, bool synchronousCall) {
+          var myImage = image.image;
+          Size size = Size(myImage.width.toDouble(), myImage.height.toDouble());
+          completer.complete(size);
+        },
+      ),
+    );
+    return completer.future;
+  }
+
+  calculateImageWidthHeight(image) async {
+    File getImage = new File(image); // Or any other way to get a File instance.
+    var decodedImage = await decodeImageFromList(getImage.readAsBytesSync());
+    print(decodedImage.width);
+    print(decodedImage.height);
+  }
 
   _onDragUpdate(BuildContext context, DragUpdateDetails update) {
     print(update.globalPosition.toString());
@@ -295,115 +330,148 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
               color: Colors.blue,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: 300,
-                  maxWidth: 300,
-                  minHeight: 300,
-                  maxHeight: 300,
-                ),
-                child: Stack(
-                  overflow: Overflow.visible,
+              child: Stack(
+                overflow: Overflow.visible,
                 children: <Widget>[
                   Center(
-                    child: Stack(
-                      children: <Widget>[
-                        _image,
-                        Draggable(
-                          data: 'Flutter',
-                          child: FlutterLogo(
-                            size: 100.0,
-                          ),
-                          feedback: FlutterLogo(
-                            size: 100.0,
-                          ),
-                          childWhenDragging: Container(),
-                        ),
-                        editMode == "textMode" ? 
-                        Container(
-                          child: Positioned(
-                            left: offset.dx,
-                            top: offset.dy,
-                            child: GestureDetector(
-                              onPanUpdate: (details) {
-                                if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
-                                  setState(() {
-                                    offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
-                                  });
-                                }
-                                print(offset.dx.toString() + " | " + offset.dy.toString());
-                              },
-                              // onScaleStart: (scaleDetails) {
-                              //   _previousScale = _scale;
-                              //   print(' scaleStarts = ${scaleDetails.focalPoint}');
-                              // },
-                              // onScaleUpdate: (scaleUpdates) {
-                              //   lastRotation += scaleUpdates.rotation;
-                              //   var offset = scaleUpdates.focalPoint;
-                              //   xOffset = offset.dx;
-                              //   yOffset = offset.dy;
+                    child: Image.network(_image),
+                  ),
+                  editMode == "textMode" ? 
+                  Positioned(
+                    left: offset.dx,
+                    top: MediaQuery.of(context).size.height / 2.5,
+                    // top: offset.dy,
+                    child: GestureDetector( 
+                      onPanUpdate: (details) { // dx: horizontal, dy: vertical
+                        if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy < 640)) {
+                        // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                          setState(() {
+                            offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                          });
+                        }
+                        print(offset.dx.toString() + " | " + offset.dy.toString());
+                      },
+                      // onScaleStart: (scaleDetails) {
+                      //   _previousScale = _scale;
+                      //   print(' scaleStarts = ${scaleDetails.focalPoint}');
+                      // },
+                      // onScaleUpdate: (scaleUpdates) {
+                      //   lastRotation += scaleUpdates.rotation;
+                      //   var offset = scaleUpdates.focalPoint;
+                      //   xOffset = offset.dx;
+                      //   yOffset = offset.dy;
 
-                              //   setState(() => _scale = _previousScale * scaleUpdates.scale);
-                              // },
-                              // onScaleEnd: (scaleEndDetails) {
-                              //   _previousScale = null;
-                              //   print(' scaleEnds = ${scaleEndDetails.velocity}');
-                              // },
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                height: 150,
-                                child: Center(
-                                        child: 
-                                        TextField(
-                                          maxLines: 10,
-                                          controller: textController,
-                                          decoration: InputDecoration(
-                                            border: InputBorder.none,
-                                          ),
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: textFontSizeUp,
-                                          ),
-                                        ),
-                                        // Text("You Think You Are Funny But You Are Not",
-                                        //   textAlign: TextAlign.center,
-                                        //   style: TextStyle(
-                                        //     fontWeight: FontWeight.bold,
-                                        //     fontSize: 28.0,
-                                        //     color: Colors.red
-                                        //   )
-                                        // ),.
-                                    ),
-                              )
-                          //   Padding(
-                          //     padding: const EdgeInsets.all(8.0),
-                          //     child: Center(
-                          //       child: 
-                          //       TextField(
-                          //         maxLines: 10,
-                          //         controller: textController,
-                          //         decoration: InputDecoration(
-                          //           border: InputBorder.none,
-                          //         ),
-                          //         style: TextStyle(
-                          //           color: Colors.black,
-                          //           fontSize: textFontSizeUp,
-                          //         ),
-                          //       ),
-                          //       // Text("You Think You Are Funny But You Are Not",
-                          //       //   textAlign: TextAlign.center,
-                          //       //   style: TextStyle(
-                          //       //     fontWeight: FontWeight.bold,
-                          //       //     fontSize: 28.0,
-                          //       //     color: Colors.red
-                          //       //   )
-                          //       // ),
-                          //     ),
-                          //   ),
-                          // )
+                      //   setState(() => _scale = _previousScale * scaleUpdates.scale);
+                      // },
+                      // onScaleEnd: (scaleEndDetails) {
+                      //   _previousScale = null;
+                      //   print(' scaleEnds = ${scaleEndDetails.velocity}');
+                      // },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: 150,
+                        color: Colors.red,
+                        child: Center(
+                          child: 
+                            TextField(
+                              focusNode: editTextFocusNode,
+                              maxLines: 10,
+                              controller: textController,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: textFontSizeUp,
+                              ),
+                            ),
+                            // Text("You Think You Are Funny But You Are Not",
+                            //   textAlign: TextAlign.center,
+                            //   style: TextStyle(
+                            //     fontWeight: FontWeight.bold,
+                            //     fontSize: 28.0,
+                            //     color: Colors.red
+                            //   )
+                            // ),.
                         ),
+                      )
+                    //   Padding(
+                    //     padding: const EdgeInsets.all(8.0),
+                    //     child: Center(
+                    //       child: 
+                    //       TextField(
+                    //         maxLines: 10,
+                    //         controller: textController,
+                    //         decoration: InputDecoration(
+                    //           border: InputBorder.none,
+                    //         ),
+                    //         style: TextStyle(
+                    //           color: Colors.black,
+                    //           fontSize: textFontSizeUp,
+                    //         ),
+                    //       ),
+                    //       // Text("You Think You Are Funny But You Are Not",
+                    //       //   textAlign: TextAlign.center,
+                    //       //   style: TextStyle(
+                    //       //     fontWeight: FontWeight.bold,
+                    //       //     fontSize: 28.0,
+                    //       //     color: Colors.red
+                    //       //   )
+                    //       // ),
+                    //     ),
+                    //   ),
+                    // )
+                    ),
+                  ) : Container(),
+                  Row( // TOP RIGHT TOOLBAR
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      IconButton( // DELETE
+                        color: Colors.white,
+                        icon: Icon(Icons.delete_outline),
+                        onPressed: () {
+                          setState(() {
+                            if (selectedMode == SelectedMode.StrokeWidth)
+                              showBottomList = !showBottomList;
+                            selectedMode = SelectedMode.StrokeWidth;
+                          });
+                        }
                       ),
-                    ) : Container(),
+                      IconButton( // CROP
+                        color: Colors.white,
+                        icon: Icon(Icons.crop),
+                        onPressed: () {
+                          setState(() {
+                            if (selectedMode == SelectedMode.StrokeWidth)
+                              showBottomList = !showBottomList;
+                            selectedMode = SelectedMode.StrokeWidth;
+                          });
+                        }
+                      ),
+                      IconButton( // WRITE
+                        color: Colors.white,
+                        icon: Icon(Icons.title),
+                        onPressed: () {
+                          print("a");
+                          FocusScope.of(context).requestFocus(editTextFocusNode);
+                          setState(() {
+                            editMode = "textMode";
+                          });
+                        }
+                      ),
+                      IconButton( // DRAW
+                        color: Colors.white,
+                        icon: Icon(Icons.create),
+                        onPressed: () {
+                          setState(() {
+                            if (selectedMode == SelectedMode.StrokeWidth)
+                              showBottomList = !showBottomList;
+                            selectedMode = SelectedMode.StrokeWidth;
+                          });
+                        }
+                      ),
+                    ],
+                  ),
                     // Draggable(
                     //   // alignment: Alignment(0.0, 0.0),
                     //   child: Container(
@@ -431,59 +499,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     //   ),
                     //   // childWhenDragging: Container(),
                     // ) : Container(),
-                  ],
-                ),
-              ),
-              Row( // TOP RIGHT TOOLBAR
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  IconButton( // DELETE
-                    color: Colors.white,
-                    icon: Icon(Icons.delete_outline),
-                    onPressed: () {
-                      setState(() {
-                        if (selectedMode == SelectedMode.StrokeWidth)
-                          showBottomList = !showBottomList;
-                        selectedMode = SelectedMode.StrokeWidth;
-                      });
-                    }
-                  ),
-                  IconButton( // CROP
-                    color: Colors.white,
-                    icon: Icon(Icons.crop),
-                    onPressed: () {
-                      setState(() {
-                        if (selectedMode == SelectedMode.StrokeWidth)
-                          showBottomList = !showBottomList;
-                        selectedMode = SelectedMode.StrokeWidth;
-                      });
-                    }
-                  ),
-                  IconButton( // WRITE
-                    color: Colors.white,
-                    icon: Icon(Icons.title),
-                    onPressed: () {
-                      setState(() {
-                        editMode = "textMode";
-                      });
-                    }
-                  ),
-                  IconButton( // DRAW
-                    color: Colors.white,
-                    icon: Icon(Icons.create),
-                    onPressed: () {
-                      setState(() {
-                        if (selectedMode == SelectedMode.StrokeWidth)
-                          showBottomList = !showBottomList;
-                        selectedMode = SelectedMode.StrokeWidth;
-                      });
-                    }
-                  ),
-                ],
-              ),
 
             ],
-          ),
           ),
         ),
       ),

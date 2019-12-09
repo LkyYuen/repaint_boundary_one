@@ -65,6 +65,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   var lastRotation = 0.0;
   bool typing = false;
   bool textMode = false;
+  bool drawMode = false;
   var textEntered = "";
   var textDisplay = "";
   var textColor;
@@ -155,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     // listen to focus changes
     editTextFocusNode.addListener(() => print('focusNode updated: hasFocus: ${editTextFocusNode.hasFocus}'));
 
-    calculateImg();
+    // calculateImg();
     // calculateImageWidthHeight(_image);
   }
 
@@ -251,12 +252,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
 
     print(color);
-    if (editMode == "drawMode") {
+    if (drawMode) {
       setState(() {
         selectedColor = color;
       });
     }
-    else if (editMode == "textMode") {
+    else if (textMode) {
       setState(() {
         textColor = color;
       });
@@ -418,7 +419,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         },
                         onTap: () {
                           setState(() {
-                            editMode = "textMode";
+                            textMode = true;
+                            // editMode = "textMode";
                           });
                         },
                         // onScaleStart: (scaleDetails) {
@@ -453,7 +455,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     visible: true,
                     // visible: editMode == "drawMode" ? true : false,
                     child: GestureDetector(
-                      onPanUpdate: editMode == "drawMode" ? (details) {
+                      onPanUpdate: drawMode ? (details) {
                         setState(() {
                           RenderBox renderBox = context.findRenderObject();
                           points.add(DrawingPoints(
@@ -465,7 +467,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 ..strokeWidth = strokeWidth));
                         });
                       } : (details) { print("a"); },
-                      onPanStart: editMode == "drawMode" ? (details) {
+                      onPanStart: drawMode ? (details) {
                         setState(() {
                           RenderBox renderBox = context.findRenderObject();
                           points.add(DrawingPoints(
@@ -477,7 +479,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 ..strokeWidth = strokeWidth));
                         });
                       } : (details) {print("b");},
-                      onPanEnd: editMode == "drawMode" ? (details) {
+                      onPanEnd: drawMode ? (details) {
                         setState(() {
                           points.add(null);
                         });
@@ -505,7 +507,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               },
                               onTap: () {
                                 setState(() {
-                                  editMode = "textMode";
+                                  drawMode = false;
+                                  textMode = true;
                                 });
                               },
                               child: Container(
@@ -529,7 +532,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     ),
                   ),
                   Visibility( // EDIT TEXT WIDGET
-                    visible: editMode == "textMode" ? true : false,
+                    visible: textMode ? true : false,
                     // visible: editTextFocusNode.hasFocus == true ? true : false,
                     child: GestureDetector( // OVERLAY EDIT TEXT
                       // onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
@@ -537,7 +540,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       onTap: () {
                         print("abc");
                         setState(() {
-                          editMode = "";
+                          textMode = false;
+                          drawMode = false;
                         });
                         FocusScope.of(context).requestFocus(new FocusNode());
                       },
@@ -559,7 +563,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 print("edit complete");
                                 FocusScope.of(context).requestFocus(new FocusNode());
                                 setState(() {
-                                  editMode = "";
+                                  textMode = false;
+                                  drawMode = false;
                                   textDisplay = textEntered;
                                 });
                               },
@@ -583,7 +588,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     ),
                   ),
                   Visibility( // COLOR SLIDER WIDGET
-                    visible: editMode == "textMode" || editMode == "drawMode" ? true : false,
+                    visible: textMode || drawMode ? true : false,
                     child: Align( // COLOR PICKER
                       alignment: Alignment(0.95, -0.65),
                       child: Container(
@@ -652,21 +657,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         onPressed: () {
                           FocusScope.of(context).requestFocus(editTextFocusNode);
                           setState(() {
-                            editMode = "textMode";
+                            // editMode = "textMode";
                             // typing = true;
-                            // textMode = true;
+                            textMode = true;
                           });
                         }
                       ),
-                      IconButton( // DRAW
-                        color: Colors.white,
-                        icon: Icon(Icons.create),
-                        onPressed: () {
-                          setState(() {
-                            editMode = "drawMode";
-                          });
-                        }
+                      CircleAvatar(
+                        backgroundColor: selectedColor,
+                        radius: 25.0,
+                        child: Center(
+                          child: IconButton( // DRAW
+                            color: Colors.white,
+                            icon: Icon(Icons.create),
+                            onPressed: () {
+                              setState(() {
+                                drawMode = !drawMode;
+                                // editMode = "drawMode";
+                              });
+                            }
+                          ),
+                        ),
                       ),
+                      SizedBox(width: 10.0,)
                     ],
                   ),
                 ],

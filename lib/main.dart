@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -50,6 +51,66 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   var _image = "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg";
   var view = "hsvPicker";
   bool isSuccessful = false;
+  var topRightIconSize = 20.0;
+
+  var selectedImg = "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg";
+
+  List<dynamic> imgArray = [
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/02/20/10/04/penguin-4008872_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/12/02/03/26/snow-4666831_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/12/05/21/07/snowman-4676142_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/12/05/21/07/snowman-4676142_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/10/30/16/19/fox-4589927_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/11/24/14/00/iceland-horses-4649468_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/12/06/12/26/the-height-of-the-4677256_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/12/06/07/58/landscape-4676862_960_720.jpg",
+      "drawPoint": [],
+    },
+    {
+      "image": "https://cdn.pixabay.com/photo/2019/12/07/14/03/winter-4679383_960_720.jpg",
+      "drawPoint": [],
+    },
+  ];
+  // static List<String> imgArray = [
+  //   "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/02/20/10/04/penguin-4008872_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/12/02/03/26/snow-4666831_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/12/05/21/07/snowman-4676142_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/10/30/16/19/fox-4589927_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/11/24/14/00/iceland-horses-4649468_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/12/06/12/26/the-height-of-the-4677256_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/12/06/07/58/landscape-4676862_960_720.jpg",
+  //   "https://cdn.pixabay.com/photo/2019/12/07/14/03/winter-4679383_960_720.jpg",
+  // ];
+
+  static var m2 = <int, List<DrawingPoints>>{}; // empty map
+  // var m2 = <String, Map<int, List<DrawingPoints>>>{}; // empty map
 
   // TEXT VARIABLE START
   //
@@ -73,6 +134,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   //
   // TEXT VARIABLE END
 
+  List newArr = List();
+
   var editMode;
   Matrix4 matrix = Matrix4.identity();
 
@@ -81,6 +144,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Color pickerColor = Colors.black;
   double strokeWidth = 3.0;
   List<DrawingPoints> points = List();
+
   bool showBottomList = false;
   double opacity = 1.0;
   StrokeCap strokeCap = (Platform.isAndroid) ? StrokeCap.butt : StrokeCap.round;
@@ -94,13 +158,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   ];
   // Draw Variable End
 
+  static var imgIndex = 0;
+  List<dynamic> imgPointsArray = List();
+
   // Color Variable Start
   ValueChanged<HSVColor> onChanged;
   List<Color> linearColor = [
     Color(0xfff32121),
     Color(0xfff3f321),
     Color(0xff21f321),
-    Color(0xff21f3f3),
+    Color(0xff21f3f3), 
     Color(0xff2121f3),
     Color(0xfff321f3),
     Color(0xfff32121),
@@ -155,9 +222,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     //  editTextFocusNode = FocusNode();
     // listen to focus changes
     editTextFocusNode.addListener(() => print('focusNode updated: hasFocus: ${editTextFocusNode.hasFocus}'));
-
     // calculateImg();
     // calculateImageWidthHeight(_image);
+
+    for (var i = 0; i < imgArray.length; i++) {
+      setState(() {
+        imgArray[i]['drawPoint'] = List<DrawingPoints>();
+      });
+    }
   }
 
   var hsvPicker = Container(
@@ -262,10 +334,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         textColor = color;
       });
     }
-
-    
-    
   }
+
   // void handleTouch(Offset globalPosition, BuildContext context) {
   //   RenderBox box = context.findRenderObject();
   //   Offset localPosition = box.globalToLocal(globalPosition);
@@ -366,24 +436,26 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               setState(() {
                 RenderBox renderBox = context.findRenderObject();
                 points.add(DrawingPoints(
-                    points: renderBox.globalToLocal(details.globalPosition),
-                    paint: Paint()
-                      ..strokeCap = strokeCap
-                      ..isAntiAlias = true
-                      ..color = selectedColor.withOpacity(opacity)
-                      ..strokeWidth = strokeWidth));
+                  points: renderBox.globalToLocal(details.globalPosition),
+                  paint: Paint()
+                    ..strokeCap = strokeCap
+                    ..isAntiAlias = true
+                    ..color = selectedColor.withOpacity(opacity)
+                    ..strokeWidth = strokeWidth)
+                );
               });
             },
             onPanStart: (details) {
               setState(() {
                 RenderBox renderBox = context.findRenderObject();
                 points.add(DrawingPoints(
-                    points: renderBox.globalToLocal(details.globalPosition),
-                    paint: Paint()
-                      ..strokeCap = strokeCap
-                      ..isAntiAlias = true
-                      ..color = selectedColor.withOpacity(opacity)
-                      ..strokeWidth = strokeWidth));
+                  points: renderBox.globalToLocal(details.globalPosition),
+                  paint: Paint()
+                    ..strokeCap = strokeCap
+                    ..isAntiAlias = true
+                    ..color = selectedColor.withOpacity(opacity)
+                    ..strokeWidth = strokeWidth)
+                );
               });
             },
             onPanEnd: (details) {
@@ -399,7 +471,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 overflow: Overflow.visible,
                 children: <Widget>[
                   Center(
-                    child: Image.network(_image),
+                    child: Image.network(selectedImg),
                   ),
                   Visibility( // DISPLAY TEXT WIDGET
                     visible: false,
@@ -455,78 +527,86 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     visible: true,
                     // visible: editMode == "drawMode" ? true : false,
                     child: GestureDetector(
-                      onPanUpdate: drawMode ? (details) {
-                        setState(() {
-                          RenderBox renderBox = context.findRenderObject();
-                          points.add(DrawingPoints(
-                              points: renderBox.globalToLocal(details.globalPosition),
-                              paint: Paint()
-                                ..strokeCap = strokeCap
-                                ..isAntiAlias = true
-                                ..color = selectedColor.withOpacity(opacity)
-                                ..strokeWidth = strokeWidth));
-                        });
-                      } : (details) { print("a"); },
                       onPanStart: drawMode ? (details) {
                         setState(() {
                           RenderBox renderBox = context.findRenderObject();
                           points.add(DrawingPoints(
-                              points: renderBox.globalToLocal(details.globalPosition),
-                              paint: Paint()
-                                ..strokeCap = strokeCap
-                                ..isAntiAlias = true
-                                ..color = selectedColor.withOpacity(opacity)
-                                ..strokeWidth = strokeWidth));
+                            points: renderBox.globalToLocal(details.globalPosition),
+                            paint: Paint()
+                              ..strokeCap = strokeCap
+                              ..isAntiAlias = true
+                              ..color = selectedColor.withOpacity(opacity)
+                              ..strokeWidth = strokeWidth
+                            )
+                          );
+                          newArr.add(points);
                         });
-                      } : (details) {print("b");},
+                      } : (details) { print("a"); },
+                      onPanUpdate: drawMode ? (details) {
+                        setState(() {
+                          RenderBox renderBox = context.findRenderObject();
+                          points.add(DrawingPoints(
+                            points: renderBox.globalToLocal(details.globalPosition),
+                            paint: Paint()
+                              ..strokeCap = strokeCap
+                              ..isAntiAlias = true
+                              ..color = selectedColor.withOpacity(opacity)
+                              ..strokeWidth = strokeWidth
+                            )
+                          );
+                        });
+                      } : (details) { print("b"); },
                       onPanEnd: drawMode ? (details) {
                         setState(() {
                           points.add(null);
+                          imgArray[imgIndex]['drawPoint'] = points;
                         });
+                        // print(points.length);
                       } : (details) { print("c"); },
                       child: CustomPaint(
                         size: Size.infinite,
                         painter: DrawingPainter(
+                          // pointsList: imgArray[imgIndex]['drawPoint'],
                           pointsList: points,
                         ),
                         // child: Text("HELLO WORLD"),
                         child: Stack(
                           children: <Widget>[
                             Positioned(
-                            left: offset.dx,
-                            top: offset.dy,
-                            child: GestureDetector( 
-                              onPanUpdate: (details) { // dx: horizontal, dy: vertical
-                                if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
-                                // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                              left: offset.dx,
+                              top: offset.dy,
+                              child: GestureDetector( 
+                                onPanUpdate: (details) { // dx: horizontal, dy: vertical
+                                  if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                                  // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                                    setState(() {
+                                      offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                                    });
+                                  }
+                                  print(offset.dx.toString() + " | " + offset.dy.toString());
+                                },
+                                onTap: () {
                                   setState(() {
-                                    offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                                    drawMode = false;
+                                    textMode = true;
                                   });
-                                }
-                                print(offset.dx.toString() + " | " + offset.dy.toString());
-                              },
-                              onTap: () {
-                                setState(() {
-                                  drawMode = false;
-                                  textMode = true;
-                                });
-                              },
-                              child: Container(
-                                width: MediaQuery.of(context).size.width * 0.7,
-                                child: Text(textDisplay,
-                                  maxLines: 100,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 28.0,
-                                    color: textColor
-                                    // color: Colors.red
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width * 0.7,
+                                  child: Text(textDisplay,
+                                    maxLines: 100,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 28.0,
+                                      color: textColor
+                                      // color: Colors.red
+                                    )
                                   )
-                                )
+                                ),
                               ),
-                            ),
-                          )
-                        ]
+                            )
+                          ]
                         )
                       ),
                     ),
@@ -630,17 +710,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
                       IconButton( // DELETE
+                        iconSize: topRightIconSize,
                         color: Colors.white,
                         icon: Icon(Icons.delete_outline),
                         onPressed: () {
                           setState(() {
-                            if (selectedMode == SelectedMode.StrokeWidth)
-                              showBottomList = !showBottomList;
-                            selectedMode = SelectedMode.StrokeWidth;
+                            imgArray[imgIndex]['drawPoint'].clear();
                           });
+                          // print(imgPointsArray.length);
                         }
                       ),
                       IconButton( // CROP
+                        iconSize: topRightIconSize,
                         color: Colors.white,
                         icon: Icon(Icons.crop),
                         onPressed: () {
@@ -651,36 +732,115 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                           });
                         }
                       ),
-                      IconButton( // WRITE
-                        color: Colors.white,
-                        icon: Icon(Icons.title),
-                        onPressed: () {
-                          FocusScope.of(context).requestFocus(editTextFocusNode);
-                          setState(() {
-                            // editMode = "textMode";
-                            // typing = true;
-                            textMode = true;
-                          });
-                        }
+                      Stack(
+                        alignment: Alignment.center,
+                        children: <Widget>[
+                          Visibility(
+                            visible: textMode ? true : false,
+                            child: Container(
+                              width: 30.0,
+                              height: 30.0,
+                              decoration: BoxDecoration(
+                                color: textColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          IconButton( // WRITE
+                            iconSize: topRightIconSize,
+                            color: Colors.white,
+                            icon: Icon(Icons.title),
+                            onPressed: () {
+                              FocusScope.of(context).requestFocus(editTextFocusNode);
+                              setState(() {
+                                // editMode = "textMode";
+                                // typing = true;
+                                // textMode = true;
+                                textMode = !textMode;
+                                drawMode = false;
+                              });
+                            }
+                          ),
+                        ],
                       ),
-                      CircleAvatar(
-                        backgroundColor: selectedColor,
-                        radius: 25.0,
-                        child: Center(
-                          child: IconButton( // DRAW
+                      Stack(
+                        alignment: Alignment.center,
+                        children: <Widget>[
+                          Visibility(
+                            visible: drawMode ? true : false,
+                            child: Container(
+                              width: 30.0,
+                              height: 30.0,
+                              decoration: BoxDecoration(
+                                color: selectedColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          IconButton( // DRAW
+                            iconSize: topRightIconSize,
                             color: Colors.white,
                             icon: Icon(Icons.create),
                             onPressed: () {
                               setState(() {
                                 drawMode = !drawMode;
+                                textMode = false;
                                 // editMode = "drawMode";
                               });
                             }
                           ),
-                        ),
+                        ],
                       ),
+                      // Container(
+                      //   width: 30.0,
+                      //   height: size,
+                      //   decoration: new BoxDecoration(
+                      //     color: Colors.white,
+                      //     shape: BoxShape.circle,
+                      //   ),
+                      //   child: new Icon(
+                      //     iconData,
+                      //     color: Colors.black,
+                      //   ),
+                      // ),
                       SizedBox(width: 10.0,)
                     ],
+                  ),
+                  Visibility( // IMAGE HORIZONTAL LIST VIEW WIDGET
+                    visible: textMode || drawMode ? false : true,
+                    child: Align(
+                      alignment: Alignment(0, 0.8),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        height: 65.0,
+                        child: Row(
+                          children: <Widget> [
+                            Expanded(
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                itemCount: imgArray.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        imgIndex = index;
+                                        points = imgArray[index]['drawPoint'];
+                                        selectedImg = imgArray[index]['image'];
+                                      });
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.only(left: 1.5, right: 1.5),
+                                      child: Image.network(imgArray[index]['image'], width: 70.0, fit: BoxFit.cover,),
+                                    )
+                                  );
+                                }
+                              )
+                            )
+                          ]
+                        )
+                      )
+                    ),
                   ),
                 ],
               ),
@@ -892,17 +1052,17 @@ class DrawingPainter extends CustomPainter {
   DrawingPainter({this.pointsList});
   List<DrawingPoints> pointsList;
   List<Offset> offsetPoints = List();
+
   @override
   void paint(Canvas canvas, Size size) {
     for (int i = 0; i < pointsList.length - 1; i++) {
       if (pointsList[i] != null && pointsList[i + 1] != null) {
-        canvas.drawLine(pointsList[i].points, pointsList[i + 1].points,
-            pointsList[i].paint);
-      } else if (pointsList[i] != null && pointsList[i + 1] == null) {
+        canvas.drawLine(pointsList[i].points, pointsList[i + 1].points, pointsList[i].paint);
+      } 
+      else if (pointsList[i] != null && pointsList[i + 1] == null) {
         offsetPoints.clear();
         offsetPoints.add(pointsList[i].points);
-        offsetPoints.add(Offset(
-            pointsList[i].points.dx + 0.1, pointsList[i].points.dy + 0.1));
+        offsetPoints.add(Offset(pointsList[i].points.dx + 0.1, pointsList[i].points.dy + 0.1));
         canvas.drawPoints(PointMode.points, offsetPoints, pointsList[i].paint);
       }
     }

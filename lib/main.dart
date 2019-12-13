@@ -17,6 +17,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart'; 
 import 'package:flutter_hsvcolor_picker/flutter_hsvcolor_picker.dart' as hsvColor;
 import 'package:flutter_widgets/flutter_widgets.dart';
+import 'package:flutter_xlider/flutter_xlider.dart';
 
 void main() => runApp(MyApp());
 
@@ -77,11 +78,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       "textPoint": [],
     },
     {
-      "image": "https://cdn.pixabay.com/photo/2019/12/05/21/07/snowman-4676142_960_720.jpg",
-      "drawPoint": [],
-      "textPoint": [],
-    },
-    {
       "image": "https://cdn.pixabay.com/photo/2019/10/30/16/19/fox-4589927_960_720.jpg",
       "drawPoint": [],
       "textPoint": [],
@@ -113,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   //
   final textController = TextEditingController();
   Offset offset = Offset.zero;
-  var textFontSizeUp = 20.0;
+  var textFontSizeUp = 30.0;
   double _scale = 1.0;
   double _previousScale;
   var yOffset = 400.0;
@@ -529,7 +525,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 28.0,
+                                    fontSize: text.textSize,
                                     color: text.coloring
                                     // color: textColor
                                     // color: Colors.red
@@ -556,6 +552,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       textMode = false;
                       drawMode = false;
                       imgArray[imgIndex]['textPoint'].textStr = textEntered;
+                      imgArray[imgIndex]['textPoint'].textSize = textFontSizeUp;
                     });
                     FocusScope.of(context).requestFocus(new FocusNode());
                   },
@@ -581,6 +578,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               drawMode = false;
                               // textDisplay = textEntered;
                               imgArray[imgIndex]['textPoint'].textStr = textEntered;
+                              imgArray[imgIndex]['textPoint'].textSize = textFontSizeUp;
                             });
                           },
                           autofocus: true,
@@ -600,6 +598,47 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
+                ),
+              ),
+              Visibility( // TEXT SIZE SLIDER
+                visible: textMode ? true : false,
+                child: Align(
+                  alignment: Alignment(0, 0.97),
+                  child: FlutterSlider(
+                    values: [textFontSizeUp],
+                    max: 100.0,
+                    min: 10.0,
+                    handler: FlutterSliderHandler(
+                      decoration: BoxDecoration(),
+                      child: Material(
+                        type: MaterialType.canvas,
+                        // elevation: 3,
+                        color: Colors.transparent,
+                        child: Container(
+                          // padding: EdgeInsets.all(5),
+                          color: Colors.transparent,
+                          // child: Text("hi")
+                          child: Image.asset('assets/un-bubble.png'),
+                        ),
+                      ),
+                    ),
+                    trackBar: FlutterSliderTrackBar(
+                      inactiveTrackBar: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: Color(0xff19d9cd),
+                      ),
+                      activeTrackBar: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: Color(0xffff4859),
+                      ),
+                    ),
+                    onDragging: (handlerIndex, lowerValue, upperValue) {
+                      setState(() {
+                        textFontSizeUp = lowerValue;
+
+                      });
+                    },
+                  )
                 ),
               ),
               Visibility( // COLOR SLIDER WIDGET
@@ -640,7 +679,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   )
                 )
               ),
-              
+  
               Row( // TOP RIGHT TOOLBAR
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
@@ -762,7 +801,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   )
                 ),
               ),
-              Align( // SAVE BUTTON
+              Visibility( // SAVE BUTTON
+                visible: textMode || drawMode ? false : true,
+                child: Align(
                 alignment: Alignment(0, 0.97),
                 child: RaisedButton(
                   child: Text('Download'),
@@ -771,6 +812,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     takeScreenShot();
                   },
                 ),
+              ),
               ),
             ],
           ),
@@ -814,7 +856,8 @@ class TextPoints {
   Color coloring;
   Offset points;
   String textStr;
-  TextPoints({this.points = Offset.zero, this.coloring = const Color(0xfff32121), this.textStr = ""});
+  double textSize;
+  TextPoints({this.points = Offset.zero, this.coloring = const Color(0xfff32121), this.textStr = "", this.textSize = 30.0});
 }
 
 enum SelectedMode { StrokeWidth, Opacity, Color }

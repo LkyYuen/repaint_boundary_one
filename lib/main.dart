@@ -59,42 +59,52 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     {
       "image": "https://cdn.pixabay.com/photo/2019/05/02/16/58/stone-4173970_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/02/20/10/04/penguin-4008872_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/12/02/03/26/snow-4666831_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/12/05/21/07/snowman-4676142_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/12/05/21/07/snowman-4676142_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/10/30/16/19/fox-4589927_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/11/24/14/00/iceland-horses-4649468_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/12/06/12/26/the-height-of-the-4677256_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/12/06/07/58/landscape-4676862_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
     {
       "image": "https://cdn.pixabay.com/photo/2019/12/07/14/03/winter-4679383_960_720.jpg",
       "drawPoint": [],
+      "textPoint": [],
     },
   ];
   // static List<String> imgArray = [
@@ -144,6 +154,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Color pickerColor = Colors.black;
   double strokeWidth = 3.0;
   List<DrawingPoints> points = List();
+  TextPoints text = TextPoints();
 
   bool showBottomList = false;
   double opacity = 1.0;
@@ -159,7 +170,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   // Draw Variable End
 
   static var imgIndex = 0;
-  List<dynamic> imgPointsArray = List();
 
   // Color Variable Start
   ValueChanged<HSVColor> onChanged;
@@ -228,8 +238,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     for (var i = 0; i < imgArray.length; i++) {
       setState(() {
         imgArray[i]['drawPoint'] = List<DrawingPoints>();
+        imgArray[i]['textPoint'] = TextPoints();
+        // imgArray[i]['textPoint'].points = Offset.zero;
       });
+      print(imgArray[i]['textPoint']);
     }
+
+    setState(() {
+      imgArray[0]['textPoint'].coloring = Color(0xfff32121);
+      imgArray[0]['textPoint'].points = Offset(22.915482954545496, 284.7656250000002);
+      imgArray[0]['textPoint'].textStr = "HELLO WORLD";
+
+      text = imgArray[0]['textPoint'];
+    });
+
+    
   }
 
   var hsvPicker = Container(
@@ -332,6 +355,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     else if (textMode) {
       setState(() {
         textColor = color;
+        imgArray[imgIndex]['textPoint'].coloring = color;
       });
     }
   }
@@ -473,56 +497,60 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   Center(
                     child: Image.network(selectedImg),
                   ),
-                  Visibility( // DISPLAY TEXT WIDGET
-                    visible: false,
-                    // visible: textMode ? true : false,
-                    child: Positioned(
-                      left: offset.dx,
-                      top: offset.dy,
-                      child: GestureDetector( 
-                        onPanUpdate: (details) { // dx: horizontal, dy: vertical
-                          if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
-                          // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
-                            setState(() {
-                              offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
-                            });
-                          }
-                          print(offset.dx.toString() + " | " + offset.dy.toString());
-                        },
-                        onTap: () {
-                          setState(() {
-                            textMode = true;
-                            // editMode = "textMode";
-                          });
-                        },
-                        // onScaleStart: (scaleDetails) {
-                        //   _previousScale = _scale;
-                        //   print(' scaleStarts = ${scaleDetails.focalPoint}');
-                        // },
-                        // onScaleUpdate: (scaleUpdates) {
-                        //   lastRotation += scaleUpdates.rotation;
-                        //   var offset = scaleUpdates.focalPoint;
-                        //   xOffset = offset.dx;
-                        //   yOffset = offset.dy;
+                  // Visibility( // DISPLAY TEXT WIDGET
+                  //   visible: true,
+                  //   // visible: textMode ? true : false,
+                  //   child: Positioned(
+                  //     left: text.points.dx,
+                  //     top: text.points.dy,
+                  //     // left: offset.dx,
+                  //     // top: offset.dy,
+                  //     child: GestureDetector( 
+                  //       onPanUpdate: (details) { // dx: horizontal, dy: vertical
+                  //         if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                  //         // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                  //           setState(() {
+                  //             offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                  //             imgArray[imgIndex]['textPoint'].points = offset;
+                  //           });
+                  //         }
+                  //         print(offset.dx.toString() + " | " + offset.dy.toString());
+                  //       },
+                  //       onTap: () {
+                  //         setState(() {
+                  //           textMode = true;
+                  //           // editMode = "textMode";
+                  //         });
+                  //       },
+                  //       // onScaleStart: (scaleDetails) {
+                  //       //   _previousScale = _scale;
+                  //       //   print(' scaleStarts = ${scaleDetails.focalPoint}');
+                  //       // },
+                  //       // onScaleUpdate: (scaleUpdates) {
+                  //       //   lastRotation += scaleUpdates.rotation;
+                  //       //   var offset = scaleUpdates.focalPoint;
+                  //       //   xOffset = offset.dx;
+                  //       //   yOffset = offset.dy;
 
-                        //   setState(() => _scale = _previousScale * scaleUpdates.scale);
-                        // },
-                        // onScaleEnd: (scaleEndDetails) {
-                        //   _previousScale = null;
-                        //   print(' scaleEnds = ${scaleEndDetails.velocity}');
-                        // },
-                        child: Text(textDisplay,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28.0,
-                            color: textColor
-                            // color: Colors.red
-                          )
-                        ),
-                      ),
-                    )
-                  ),
+                  //       //   setState(() => _scale = _previousScale * scaleUpdates.scale);
+                  //       // },
+                  //       // onScaleEnd: (scaleEndDetails) {
+                  //       //   _previousScale = null;
+                  //       //   print(' scaleEnds = ${scaleEndDetails.velocity}');
+                  //       // },
+                  //       child: Text(text.textStr,
+                  //         textAlign: TextAlign.center,
+                  //         style: TextStyle(
+                  //           fontWeight: FontWeight.bold,
+                  //           fontSize: 28.0,
+                  //           color: text.coloring
+                  //           // color: textColor
+                  //           // color: Colors.red
+                  //         )
+                  //       ),
+                  //     ),
+                  //   )
+                  // ),
                   Visibility( // DRAWING WIDGET
                     visible: true,
                     // visible: editMode == "drawMode" ? true : false,
@@ -573,14 +601,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         child: Stack(
                           children: <Widget>[
                             Positioned(
-                              left: offset.dx,
-                              top: offset.dy,
+                              left: text.points.dx,
+                              top: text.points.dy,
                               child: GestureDetector( 
                                 onPanUpdate: (details) { // dx: horizontal, dy: vertical
-                                  if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.9) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
-                                  // if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && (offset.dy + details.delta.dy < MediaQuery.of(context).size.height * 0.8)) {
+                                  // if ((offset.dx + details.delta.dx > 0 ) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                                  // if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                                  if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy < MediaQuery.of(context).size.height) {
                                     setState(() {
                                       offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                                      imgArray[imgIndex]['textPoint'].points = offset;
                                     });
                                   }
                                   print(offset.dx.toString() + " | " + offset.dy.toString());
@@ -593,13 +623,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 },
                                 child: Container(
                                   width: MediaQuery.of(context).size.width * 0.7,
-                                  child: Text(textDisplay,
+                                  child: Text(text.textStr,
                                     maxLines: 100,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 28.0,
-                                      color: textColor
+                                      color: text.coloring
+                                      // color: textColor
                                       // color: Colors.red
                                     )
                                   )
@@ -622,6 +653,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         setState(() {
                           textMode = false;
                           drawMode = false;
+                          imgArray[imgIndex]['textPoint'].textStr = textEntered;
                         });
                         FocusScope.of(context).requestFocus(new FocusNode());
                       },
@@ -645,7 +677,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 setState(() {
                                   textMode = false;
                                   drawMode = false;
-                                  textDisplay = textEntered;
+                                  // textDisplay = textEntered;
+                                  imgArray[imgIndex]['textPoint'].textStr = textEntered;
                                 });
                               },
                               autofocus: true,
@@ -717,7 +750,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                           setState(() {
                             imgArray[imgIndex]['drawPoint'].clear();
                           });
-                          // print(imgPointsArray.length);
                         }
                       ),
                       IconButton( // CROP
@@ -753,9 +785,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             onPressed: () {
                               FocusScope.of(context).requestFocus(editTextFocusNode);
                               setState(() {
-                                // editMode = "textMode";
-                                // typing = true;
-                                // textMode = true;
                                 textMode = !textMode;
                                 drawMode = false;
                               });
@@ -785,7 +814,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               setState(() {
                                 drawMode = !drawMode;
                                 textMode = false;
-                                // editMode = "drawMode";
                               });
                             }
                           ),
@@ -827,7 +855,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         imgIndex = index;
                                         points = imgArray[index]['drawPoint'];
                                         selectedImg = imgArray[index]['image'];
+                                        text = imgArray[index]['textPoint'];
                                       });
+                                      print(text.textStr + ' | ' + text.coloring.toString() + ' | ' + text.points.toString());
                                     },
                                     child: Container(
                                       margin: EdgeInsets.only(left: 1.5, right: 1.5),
@@ -1076,6 +1106,13 @@ class DrawingPoints {
   Paint paint;
   Offset points;
   DrawingPoints({this.points, this.paint});
+}
+
+class TextPoints {
+  Color coloring;
+  Offset points;
+  String textStr;
+  TextPoints({this.points = Offset.zero, this.coloring = const Color(0xfff32121), this.textStr = ""});
 }
 
 enum SelectedMode { StrokeWidth, Opacity, Color }

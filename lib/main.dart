@@ -107,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   // TEXT VARIABLE START
   //
   //
-  final textController = TextEditingController();
+  var textController = TextEditingController();
   Offset offset = Offset.zero;
   var textFontSizeUp = 30.0;
   double _scale = 1.0;
@@ -473,70 +473,69 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       });
                       // print(points.length);
                     } : (details) { print("c"); },
-                    child: CustomPaint(
-                      size: Size.infinite,
-                      painter: DrawingPainter(
-                        // pointsList: imgArray[imgIndex]['drawPoint'],
-                        pointsList: points,
-                      ),
-                      // child: Text("HELLO WORLD"),
-                      child: Stack(
-                        children: <Widget>[
-                          Center(
-                            child: Image.network(selectedImg),
-                            // child: VisibilityDetector(
-                            //   key: UniqueKey(),
-                            //   onVisibilityChanged: (VisibilityInfo info) {
-                            //     debugPrint("${info.visibleFraction} of my widget is visible");
-                            //     if (info.visibleFraction == 1.0) {
-                            //       setState(() {
-                            //         showCompletely = true;
-                            //       });
-                            //     }
-                            //   },
-                            //   child: Image.network(selectedImg),
-                            // )
+                    child: Stack(
+                      children: <Widget>[
+                        Center(
+                          child: Image.network(selectedImg),
+                          // child: VisibilityDetector(
+                          //   key: UniqueKey(),
+                          //   onVisibilityChanged: (VisibilityInfo info) {
+                          //     debugPrint("${info.visibleFraction} of my widget is visible");
+                          //     if (info.visibleFraction == 1.0) {
+                          //       setState(() {
+                          //         showCompletely = true;
+                          //       });
+                          //     }
+                          //   },
+                          //   child: Image.network(selectedImg),
+                          // )
+                        ),
+                        CustomPaint(
+                          size: Size.infinite,
+                          painter: DrawingPainter(
+                            pointsList: points,
                           ),
-                          Positioned(
-                            left: text.points.dx,
-                            top: text.points.dy,
-                            child: GestureDetector( 
-                              onPanUpdate: (details) { // dx: horizontal, dy: vertical
-                                // if ((offset.dx + details.delta.dx > 0 ) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
-                                // if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
-                                if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy < MediaQuery.of(context).size.height) {
-                                  setState(() {
-                                    offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
-                                    imgArray[imgIndex]['textPoint'].points = offset;
-                                  });
-                                }
-                                print(offset.dx.toString() + " | " + offset.dy.toString());
-                              },
-                              onTap: () {
+                        ),
+                        Positioned(
+                          left: text.points.dx,
+                          top: text.points.dy,
+                          child: GestureDetector( 
+                            onPanUpdate: (details) { // dx: horizontal, dy: vertical
+                              // if ((offset.dx + details.delta.dx > 0 ) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                              // if ((offset.dx + details.delta.dx > 0 && offset.dx + details.delta.dx < MediaQuery.of(context).size.width) && (offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy <  MediaQuery.of(context).size.height)) {
+                              if ((offset.dx + details.delta.dx < MediaQuery.of(context).size.width * 0.8) && offset.dy + details.delta.dy > 0 && offset.dy + details.delta.dy < MediaQuery.of(context).size.height) {
                                 setState(() {
-                                  drawMode = false;
-                                  textMode = true;
+                                  offset = Offset(offset.dx + details.delta.dx, offset.dy + details.delta.dy);
+                                  imgArray[imgIndex]['textPoint'].points = offset;
                                 });
-                              },
-                              child: Container(
-                                width: MediaQuery.of(context).size.width * 0.7,
-                                child: Text(text.textStr,
-                                  maxLines: 100,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: text.textSize,
-                                    color: text.coloring
-                                    // color: textColor
-                                    // color: Colors.red
-                                  )
+                              }
+                              print(offset.dx.toString() + " | " + offset.dy.toString());
+                            },
+                            onTap: () {
+                              setState(() {
+                                drawMode = false;
+                                textMode = true;
+                                textController.text = imgArray[imgIndex]['textPoint'].textStr;
+                              });
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.7,
+                              child: Text(text.textStr,
+                                maxLines: 100,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: text.textSize,
+                                  color: text.coloring
+                                  // color: textColor
+                                  // color: Colors.red
                                 )
-                              ),
+                              )
                             ),
-                          )
-                        ]
-                      )
-                    ),
+                          ),
+                        ),
+                      ]
+                    )
                   ),
                 ),
               ),
@@ -683,15 +682,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               Row( // TOP RIGHT TOOLBAR
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  IconButton( // DELETE
-                    iconSize: topRightIconSize,
-                    color: Colors.white,
-                    icon: Icon(Icons.delete_outline),
-                    onPressed: () {
-                      setState(() {
-                        imgArray[imgIndex]['drawPoint'].clear();
-                      });
-                    }
+                  Visibility( // DELETE
+                    // visible: true,
+                    visible: textMode || drawMode ? true : false,
+                    child: IconButton( // DELETE
+                      iconSize: topRightIconSize,
+                      color: Colors.white,
+                      icon: Icon(Icons.delete_outline),
+                      onPressed: () {
+                        if (textMode) {
+                          // setState(() => imgArray[imgIndex]['textPoint'] = TextPoints());
+                          // print(imgArray[imgIndex]['textPoint'].textStr);
+                        } else if (drawMode) {
+                          setState(() => imgArray[imgIndex]['drawPoint'].clear());
+                        }
+                      }
+                    ),
                   ),
                   IconButton( // CROP
                     iconSize: topRightIconSize,
@@ -705,7 +711,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       });
                     }
                   ),
-                  Stack(
+                  Stack( // WRITE
                     alignment: Alignment.center,
                     children: <Widget>[
                       Visibility(
@@ -726,6 +732,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         onPressed: () {
                           FocusScope.of(context).requestFocus(editTextFocusNode);
                           setState(() {
+                            textController.text = "";
                             textMode = !textMode;
                             drawMode = false;
                           });
@@ -733,7 +740,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-                  Stack(
+                  Stack( // DRAW
                     alignment: Alignment.center,
                     children: <Widget>[
                       Visibility(

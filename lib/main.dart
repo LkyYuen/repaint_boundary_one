@@ -16,6 +16,7 @@ import 'package:repaint_boundary_one/PermissionsService.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart'; 
 import 'package:flutter_hsvcolor_picker/flutter_hsvcolor_picker.dart' as hsvColor;
+import 'package:flutter_widgets/flutter_widgets.dart';
 
 void main() => runApp(MyApp());
 
@@ -176,23 +177,42 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
   
   takeScreenShot() async {
-    print("processing");
-    RenderRepaintBoundary boundary = previewContainer.currentContext.findRenderObject();
-    ui.Image image = await boundary.toImage(pixelRatio: 1.0);
-    ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List pngBytes = byteData.buffer.asUint8List();
-    String bs64 = base64Encode(pngBytes);
+    _showDialog();
+    await Future.delayed(const Duration(milliseconds: 100));
+    for (var i = 0; i < imgArray.length; i++) {
+      setState(() {
+        points = imgArray[i]['drawPoint'];
+        selectedImg = imgArray[i]['image'];
+        text = imgArray[i]['textPoint'];
+      });
+      // print(selectedImg);
+      await Future.delayed(const Duration(milliseconds: 100)); // wait for 0.1 seconds for the changes to reflect
+      // if (!showCompletely) {
+      //   await Future.delayed(const Duration(milliseconds: 500)); // wait for 0.1 seconds for the changes to reflect
+      // }
+      FocusScope.of(context).requestFocus(FocusNode());
+      print("processing " + i.toString());
+      RenderRepaintBoundary boundary = previewContainer.currentContext.findRenderObject();
+      ui.Image image = await boundary.toImage(pixelRatio: 1.0);
+      ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData.buffer.asUint8List();
+      String bs64 = base64Encode(pngBytes);
 
-    
-    final directory = await getExternalStorageDirectory();
-    final myImagePath = '${directory.path}/MyImages';
-    final myImgDir = await new Directory(myImagePath).create();
+      
+      final directory = await getExternalStorageDirectory();
+      final myImagePath = '${directory.path}/MyImages';
+      final myImgDir = await new Directory(myImagePath).create();
 
-    File imgFile = File('$myImagePath/abc.png');
-    imgFile.writeAsBytes(pngBytes);
-    print(imgFile);
-    // await GallerySaver.saveImage(imgFile);
-    print("done");
+      File imgFile = File('$myImagePath/${timestamp()}_$i.png');
+      imgFile.writeAsBytes(pngBytes);
+      print(imgFile);
+      // await GallerySaver.saveImage(imgFile);
+      print("done " + i.toString());
+    }
+    // setState(() {
+    //   isSaving = false;
+    // });
+    Navigator.pop(context);
   }
 
   @override
@@ -345,6 +365,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
   }
 
+  void _showDialog() {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: <Widget>[
+              CircularProgressIndicator(),
+              SizedBox(width: 10),
+              Text("Saving..."),
+            ],
+          )
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -450,6 +488,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         children: <Widget>[
                           Center(
                             child: Image.network(selectedImg),
+                            // child: VisibilityDetector(
+                            //   key: UniqueKey(),
+                            //   onVisibilityChanged: (VisibilityInfo info) {
+                            //     debugPrint("${info.visibleFraction} of my widget is visible");
+                            //     if (info.visibleFraction == 1.0) {
+                            //       setState(() {
+                            //         showCompletely = true;
+                            //       });
+                            //     }
+                            //   },
+                            //   child: Image.network(selectedImg),
+                            // )
                           ),
                           Positioned(
                             left: text.points.dx,
@@ -712,16 +762,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   )
                 ),
               ),
-              Align(
+              Align( // SAVE BUTTON
                 alignment: Alignment(0, 0.97),
                 child: RaisedButton(
                   child: Text('Download'),
                   onPressed: (){
-                    FocusScope.of(context).requestFocus(FocusNode());
+                    // FocusScope.of(context).requestFocus(FocusNode());
                     takeScreenShot();
                   },
                 ),
-              )
+              ),
             ],
           ),
         ),
